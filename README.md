@@ -1,94 +1,67 @@
-# Obsidian Sample Plugin
+# ✨ KOReader Sync for Obsidian
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+A plugin for [Obsidian](https://obsidian.md) that acts as a web server, allowing [KOReader](https://koreader.rocks/) to send your reading highlights and notes directly into your vault.
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+This plugin starts a local HTTP server that listens for requests from the KOReader sync plugin. When it receives data, it parses the highlights, formats them as Markdown (using callouts), and saves them to a `.md` file corresponding to the book, either creating the file or updating it with new annotations.
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+## 🚀 Features
 
-## First time developing plugins?
+* **Embedded HTTP Server:** Start and stop a local server directly from Obsidian.
+* **Secure Validation:** Uses an authorized "Device IDs" list to ensure only your KOReader devices can send data.
+* **Note Creation & Updating:** Automatically creates a new `.md` file for a book or appends/updates highlights in an existing file based on the highlight's datetime.
+* **Smart Formatting:** Converts KOReader highlights and notes into formatted `[!quote]` and `[!note]` callout blocks, complete with page and chapter context.
+* **Settings Panel:** Simple UI to enable the server, set the port, and manage authorized device IDs.
+* **Server Status:** Easily see if the server is "Online" or "Offline" from the settings screen.
 
-Quick starting guide for new plugin devs:
+## 🔧 Installation (Manual)
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+1.  Go to the project's **Releases** page (or build it yourself).
+2.  Download the `main.js`, `manifest.json`, and `styles.css` files from the latest release.
+3.  In your Obsidian vault, navigate to the plugins folder: `YourVault/.obsidian/plugins/`.
+4.  Create a new folder named `koreader-sync`.
+5.  Copy the downloaded files (`main.js`, `manifest.json`, `styles.css`) into the `koreader-sync` folder.
+6.  Open Obsidian, go to **Settings** > **Community Plugins**.
+7.  Turn off "Restricted mode" if it's on.
+8.  Find "Koreader Sync" in your list of installed plugins and enable it.
 
-## Releasing new releases
+## ⚙️ How to Use
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+For the sync to work, you must first configure this plugin (the server in Obsidian) and then point your KOReader sync plugin to it.
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+1.  In **Obsidian**, go to **Settings** > **Plugin Options** > **KOReader Sync**.
+2.  **Enable the server** by toggling "Enable sync server".
+3.  (Optional) Change the **Server Port** if the default (`9090`) is already in use by another application.
+4.  In **Valid Device IDs**, add your KOReader device's ID (one ID per line).
+    * *Note: You can find this ID in the "Debug info" menu of the sync plugin on your KOReader device.*
+5.  Find your computer's local IP address (e.g., `192.168.1.10`).
+6.  On your **KOReader device**, open its sync plugin, go to "Configure," and enter your Obsidian's IP and Port (e.g., `192.168.1.10` and `9090`).
+7.  In KOReader, select **"Sync now"**. The highlights will appear in your Obsidian vault.
 
-## Adding your plugin to the community plugin list
+## 💡 How It Works (Client-Side)
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+This plugin is the *server*. It expects a *client* (like the KOReader sync plugin) to make the following request:
 
-## How to use
+* **Method:** `POST`
+* **Endpoint:** `http://<your_ip>:<your_port>/sync`
+* **Headers:**
+    * `Content-Type: application/json`
+    * `Authorization: <device_id>` (Your KOReader device ID)
+* **Body:**
+    A JSON object (`KORMetadata`) containing the book metadata (`stats`) and a list of annotations (`annotations`).
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+Your server (this plugin) will:
+1.  Listen on the `/sync` endpoint.
+2.  Validate that the `Authorization` header contains a Device ID listed in your "Valid Device IDs".
+3.  Parse the incoming JSON body.
+4.  Use the `fileService` to find, create, or update the book's `.md` file.
+5.  Format each annotation using `markdown.ts` and save it to the file.
+6.  Respond with an **HTTP `200`** status on success. If something goes wrong (e.g., invalid ID), it will respond with an error (e.g., `401 Unauthorized`).
 
-## Manually installing the plugin
+## 🐛 Debugging
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+If you have connection issues:
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint ./src/`
-
-## Funding URL
-
-You can include funding URLs where people who use your plugin can financially support it.
-
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
-
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
-```
-
-If you have multiple URLs, you can also do:
-
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
-
-## API Documentation
-
-See https://github.com/obsidianmd/obsidian-api
+* Check the plugin's **Settings** screen in Obsidian. The **Server Status** must be "Online".
+* If it's "Offline", check that the chosen port isn't being used by another application. You may see an "EADDRINUSE" error notice in Obsidian if this happens.
+* Ensure the **Valid Device ID** saved in Obsidian is *exactly* the same as the ID shown in your KOReader's "Debug info".
+* Make sure your KOReader device is on the same Wi-Fi network as your computer and that a firewall (on your computer or router) is not blocking the connection on the chosen port.
