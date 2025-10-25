@@ -8,6 +8,7 @@ const DEFAULT_SETTINGS: KOReaderSyncSettings = {
 	port: 9090,
 	validDeviceIDs: ["gen-Pk9AycH1ipeoU3Kt", "gen-aeCWBx22oVJkipQf"],
 	isServerEnabled: false,
+	highlightsFolder: "highlights",
 };
 
 export default class KOReaderSyncPlugin extends Plugin {
@@ -45,7 +46,7 @@ export default class KOReaderSyncPlugin extends Plugin {
 		);
 	}
 
-async saveSettings() {
+	async saveSettings() {
 		await this.saveData(this.settings);
 	}
 
@@ -109,4 +110,3 @@ async saveSettings() {
 		await this.saveSettings();
 	}
 }
-
