@@ -1,5 +1,23 @@
 import { App, Notice, PluginSettingTab, Setting } from "obsidian";
 import type KOReaderSyncPlugin from "../../main";
+import * as os from "os";
+
+function getLocalIPAddresses(): string[] {
+	const interfaces = os.networkInterfaces();
+	const ips: string[] = [];
+
+	for (const name of Object.keys(interfaces)) {
+		const iface = interfaces[name];
+		if (!iface) continue;
+
+		for (const info of iface) {
+			if (info.family === "IPv4" && !info.internal) {
+				ips.push(info.address);
+			}
+		}
+	}
+	return ips;
+}
 
 export class KOReaderSyncSettingTab extends PluginSettingTab {
 	plugin: KOReaderSyncPlugin;
@@ -33,21 +51,34 @@ export class KOReaderSyncSettingTab extends PluginSettingTab {
 			.setDesc("Shows whether the server is currently online or offline.")
 			.addText((text) => {
 				text.setDisabled(true);
-				if (
-					this.plugin.settings.isServerEnabled &&
-					this.plugin.server
-				) {
+				if (this.plugin.settings.isServerEnabled && this.plugin.server) {
 					text.setValue("Online").inputEl.style.color = "#40a02b";
 				} else {
 					text.setValue("Offline").inputEl.style.color = "#d20f39";
 				}
 			});
 
+		// NEW: IP Display Box
+		const ips = getLocalIPAddresses();
+		const ipString =
+			ips.length > 0
+				? ips.join("\n")
+				: "No local IP addresses found (Check Wi-Fi/Ethernet connection)";
+
+		new Setting(containerEl)
+			.setName("Computer IP (Read-only)")
+			.setDesc(
+				"Use one of these IP addresses in your KOReader app. (Updates when this tab is reopened)."
+			)
+			.addTextArea((text) => {
+				text.setValue(ipString).setDisabled(true);
+				text.inputEl.style.resize = "none";
+				text.inputEl.style.height = `${Math.max(2, ips.length) * 1.5 + 0.5}em`;
+			});
+
 		new Setting(containerEl)
 			.setName("Server Port")
-			.setDesc(
-				"Port for the server to listen on. (Requires server restart if changed)"
-			)
+			.setDesc("Port for the server to listen on. (Requires server restart if changed)")
 			.addText((text) =>
 				text
 					.setPlaceholder("9090")
@@ -59,9 +90,7 @@ export class KOReaderSyncSettingTab extends PluginSettingTab {
 							await this.plugin.saveSettings();
 
 							if (this.plugin.settings.isServerEnabled) {
-								new Notice(
-									"KOReader Sync: Port changed. Restarting server..."
-								);
+								new Notice("KOReader Sync: Port changed. Restarting server...");
 								this.plugin.stopServer();
 								setTimeout(() => {
 									this.plugin.startServer();
@@ -82,9 +111,7 @@ export class KOReaderSyncSettingTab extends PluginSettingTab {
 					.setPlaceholder("highlights")
 					.setValue(this.plugin.settings.highlightsFolder)
 					.onChange(async (value) => {
-						const cleanPath = value
-							.trim()
-							.replace(/^\/+|\/+$/g, "");
+						const cleanPath = value.trim().replace(/^\/+|\/+$/g, "");
 						this.plugin.settings.highlightsFolder = cleanPath;
 						await this.plugin.saveSettings();
 					})
