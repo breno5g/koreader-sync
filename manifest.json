@@ -3,7 +3,7 @@
 	"name": "Koreader Sync",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "A plugin for Obsidian that acts as a web server, allowing KOReader to send your reading highlights and notes directly into your vault.",
+	"description": "A plugin that acts as a web server, allowing KOReader to send your reading highlights and notes directly into your vault.",
 	"author": "Breno Santos",
 	"authorUrl": "http://blog.breno5g.dev/",
 	"isDesktopOnly": true
