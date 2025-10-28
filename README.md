@@ -1,6 +1,6 @@
 # ✨ KOReader Sync for Obsidian
 
-A plugin for [Obsidian](https://obsidian.md) that acts as a web server, allowing [KOReader](https://koreader.rocks/) to send your reading highlights and notes directly into your vault.
+A plugin that acts as a web server, allowing KOReader to send your reading highlights and notes directly into your vault.
 
 This plugin starts a local HTTP server that listens for requests from the KOReader sync plugin. When it receives data, it parses the highlights, formats them as Markdown (using callouts), and saves them to a `.md` file corresponding to the book, either creating the file or updating it with new annotations.
 
