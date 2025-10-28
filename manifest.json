@@ -3,9 +3,8 @@
 	"name": "Koreader Sync",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
-	"isDesktopOnly": false
+	"description": "A plugin for Obsidian that acts as a web server, allowing KOReader to send your reading highlights and notes directly into your vault.",
+	"author": "Breno Santos",
+	"authorUrl": "http://blog.breno5g.dev/",
+	"isDesktopOnly": true
 }
