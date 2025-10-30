@@ -1,8 +1,11 @@
-/*
+.koreader-sync-status-online {
+	color: #40a02b;
+}
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.koreader-sync-status-offline {
+	color: #d20f39;
+}
 
-If your plugin does not need CSS, delete this file.
-
-*/
+.koreader-sync-ip-textarea {
+	resize: none;
+}

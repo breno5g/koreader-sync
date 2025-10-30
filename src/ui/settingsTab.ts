@@ -51,10 +51,15 @@ export class KOReaderSyncSettingTab extends PluginSettingTab {
 			.setDesc("Shows whether the server is currently online or offline.")
 			.addText((text) => {
 				text.setDisabled(true);
-				if (this.plugin.settings.isServerEnabled && this.plugin.server) {
-					text.setValue("Online").inputEl.style.color = "#40a02b";
+				if (
+					this.plugin.settings.isServerEnabled &&
+					this.plugin.server
+				) {
+					text.setValue("Online");
+					text.inputEl.addClass("koreader-sync-status-online");
 				} else {
-					text.setValue("Offline").inputEl.style.color = "#d20f39";
+					text.setValue("Offline");
+					text.inputEl.addClass("koreader-sync-status-offline");
 				}
 			});
 
@@ -72,13 +77,15 @@ export class KOReaderSyncSettingTab extends PluginSettingTab {
 			)
 			.addTextArea((text) => {
 				text.setValue(ipString).setDisabled(true);
-				text.inputEl.style.resize = "none";
-				text.inputEl.style.height = `${Math.max(2, ips.length) * 1.5 + 0.5}em`;
+				text.inputEl.addClass("koreader-sync-ip-textarea");
+				text.inputEl.rows = Math.max(2, ips.length);
 			});
 
 		new Setting(containerEl)
 			.setName("Server Port")
-			.setDesc("Port for the server to listen on. (Requires server restart if changed)")
+			.setDesc(
+				"Port for the server to listen on. (Requires server restart if changed)"
+			)
 			.addText((text) =>
 				text
 					.setPlaceholder("9090")
@@ -90,7 +97,9 @@ export class KOReaderSyncSettingTab extends PluginSettingTab {
 							await this.plugin.saveSettings();
 
 							if (this.plugin.settings.isServerEnabled) {
-								new Notice("KOReader Sync: Port changed. Restarting server...");
+								new Notice(
+									"KOReader Sync: Port changed. Restarting server..."
+								);
 								this.plugin.stopServer();
 								setTimeout(() => {
 									this.plugin.startServer();
@@ -111,7 +120,9 @@ export class KOReaderSyncSettingTab extends PluginSettingTab {
 					.setPlaceholder("highlights")
 					.setValue(this.plugin.settings.highlightsFolder)
 					.onChange(async (value) => {
-						const cleanPath = value.trim().replace(/^\/+|\/+$/g, "");
+						const cleanPath = value
+							.trim()
+							.replace(/^\/+|\/+$/g, "");
 						this.plugin.settings.highlightsFolder = cleanPath;
 						await this.plugin.saveSettings();
 					})
